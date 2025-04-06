@@ -1,0 +1,125 @@
+import pandas as pd
+
+df=pd.read_csv("vgchartz-2024.csv")
+df
+
+df.info()
+
+df.isnull().sum()
+
+df.drop(columns=['img','last_update'], inplace=True)
+
+df
+
+# Convert 'release_date' and 'last_update' to datetime format
+df['release_date'] = pd.to_datetime(df['release_date'], errors='coerce')
+
+df
+
+df.info()
+
+# Fill missing values
+df['developer'].fillna('Unknown', inplace=True)  
+df['critic_score'].fillna(df['critic_score'].median(), inplace=True)  
+df['release_date'].fillna('Unknown', inplace=True)
+
+df.isnull().sum()
+
+sales_columns = ['total_sales', 'na_sales', 'jp_sales', 'pal_sales', 'other_sales']
+df[sales_columns] = df[sales_columns].fillna(0)
+
+df.isnull().sum()
+
+df.duplicated().sum()
+
+# Drop duplicate rows
+df.drop_duplicates(inplace=True)
+
+df.duplicated().sum()
+
+df.to_csv("vgchartz_New.csv", index=False)
+
+df.info()
+
+df['release_date'] = pd.to_datetime(df['release_date'], errors='coerce')
+
+df.info()
+
+from sklearn.preprocessing import LabelEncoder
+label_encoder = LabelEncoder()
+df["console"]=label_encoder. fit_transform(df["console"])
+df["genre"]=label_encoder. fit_transform(df["genre"])
+df["publisher"]=label_encoder. fit_transform(df["publisher"])
+df["developer"]=label_encoder. fit_transform(df["developer"])
+df
+
+X= df.drop(["total_sales","title","release_date"],axis=1)
+X
+
+Y=df["total_sales"]
+Y
+
+from sklearn.model_selection import train_test_split
+X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.2, random_state=42)
+
+X_test.head(44)
+# X_test.iloc[0:10, 1:5]
+
+Y_test.head(44)
+
+from sklearn.ensemble import RandomForestRegressor
+Model= RandomForestRegressor(n_estimators=120, random_state=55)
+Model.fit(X_train,Y_train)
+
+Y_pred= Model.predict(X_test)
+Y_pred
+
+import matplotlib.pyplot as plt
+plt.figure(figsize=(10, 6))
+plt.scatter(Y_test, Y_pred, color='orange', alpha=1)
+plt.plot([Y_test.min(), Y_test.max()], [Y_test.min(), Y_test.max()], color='green', linewidth=2)
+plt.title('Actual vs Predicted Total Sales')
+plt.xlabel('Actual Total Sales')
+plt.ylabel('Predicted Total Sales')
+plt.grid(True)
+
+from sklearn.metrics import r2_score
+r2= r2_score(Y_test,Y_pred)
+r2
+
+from sklearn.metrics import mean_absolute_error
+mae= mean_absolute_error(Y_test,Y_pred)
+mae
+
+Y_predict_1= Model.predict(X_test[:13])
+Y_predict_1
+# Y_predict_1= Model.predict(np.array([X_test.iloc[44]])) - Wrong Method
+
+r2_1= r2_score(Y_test.iloc[:13],Y_predict_1)
+# r2_1= r2_score(np.array([Y_test.iloc[:13]]),np.array([Y_predict_1])) - Wrong Method
+r2_1
+
+mae_1= mean_absolute_error(Y_test.iloc[:13],Y_predict_1)
+mae_1
+
+Y_predict_2= Model.predict(X_test[42:44])
+Y_predict_2
+
+r2_2= r2_score(Y_test.iloc[42:44],Y_predict_2)
+r2_2
+
+mae_2= mean_absolute_error(Y_test.iloc[42:44],Y_predict_2)
+mae_2
+
+Y_predict_UserInput= Model.predict([[57,17,677,6973,8.8,0.45,0.12,0.22,0.13],[79,7,1998,7449,6.9,0.99,0.11,0.19,0.15],[59,24,1999,5430,8.1,0.28,0.10,0.24,0.11],[67,8,2010,7352,8.3,0.31,0.17,0.33,0.2]])
+Y_predict_UserInput
+
+r2_3= r2_score(Y_test.iloc[[4,5,42,43]],Y_predict_UserInput)
+r2_3
+
+**The above R2 score is negative. Model for this particular "Y_predict_UserInput" is worse than predicting the mean. So it is a bad fit**
+
+mae_3= mean_absolute_error(Y_test.iloc[[4,5,42,43]],Y_predict_UserInput)
+mae_3
+
+**The above MAE is more for this particular "Y_predict_UserInput". So it is a bad fit**
